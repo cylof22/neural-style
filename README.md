@@ -1,4 +1,4 @@
-# neural-style
+# neural-style [![Build Status](https://github.com/anishathalye/neural-style/workflows/CI/badge.svg)](https://github.com/anishathalye/neural-style/actions?query=workflow%3ACI)
 
 An implementation of [neural style][paper] in TensorFlow.
 
@@ -24,9 +24,16 @@ your web browser without installing any software (using
 
 Run `python neural_style.py --help` to see a list of all options.
 
+If you are running this project on [Floydhub](https://www.floydhub.com) you can use the following syntax (this pulls in the pre-trained VGG network automatically):
+
+`floyd run --gpu --env tensorflow-1.3
+--data  floydhub/datasets/imagenet-vgg-verydeep-19/3:vgg
+"python neural_style.py --network /vgg/imagenet-vgg-verydeep-19.mat --content <content file> --styles <style file> --output <output file>"`
+
+
 Use `--checkpoint-output` and `--checkpoint-iterations` to save checkpoint images.
 
-Use `--iterations` to change the number of iterations (default 1000).  For a 512×512 pixel content file, 1000 iterations take 2.5 minutes on a GeForce GTX Titan X GPU, or 90 minutes on an Intel Core i7-5930K CPU.
+Use `--iterations` to change the number of iterations (default 1000).  For a 512×512 pixel content file, 1000 iterations take 60 seconds on a GTX 1080 Ti, 90 seconds on a Maxwell Titan X, or 60 minutes on an Intel Core i7-5930K. Using a GPU is highly recommended due to the huge speedup.
 
 ## Example 1
 
@@ -74,7 +81,7 @@ value is 1.0 - all layers treated equally. Somewhat extreme examples of what you
 ![--style-layer-weight-exp 0.2](examples/tweaks/swe02.jpg)
 ![--style-layer-weight-exp 2.0](examples/tweaks/swe20.jpg)
 
-(**left**: 0.2 - finer features style transfer; **right**: 2.0 - coarser features style trasnfer)
+(**left**: 0.2 - finer features style transfer; **right**: 2.0 - coarser features style transfer)
 
 `--content-weight-blend` specifies the coefficient of content transfer layers. Default value -
 1.0, style transfer tries to preserve finer grain content details. The value should be
@@ -87,8 +94,8 @@ in range [0.0; 1.0].
 
 `--pooling` allows to select which pooling layers to use (specify either `max` or `avg`).
 Original VGG topology uses max pooling, but the [style transfer paper][paper] suggests
-replacing it with average pooling. The outputs are perceptually differnt, max pool in
-general tends to have finer detail style trasnfer, but could have troubles at
+replacing it with average pooling. The outputs are perceptually different, max pool in
+general tends to have finer detail style transfer, but could have troubles at
 lower-freqency detail level:
 
 ![--pooling max](examples/tweaks/swe14_pmax.jpg)
@@ -98,7 +105,7 @@ lower-freqency detail level:
 
 `--preserve-colors` boolean command line argument adds post-processing step, which
 combines colors from the original image and luma from the stylized image (YCbCr color
-space), thus producing color-preserving style trasnfer:
+space), thus producing color-preserving style transfer:
 
 ![--pooling max](examples/tweaks/swe14_pmax.jpg)
 ![--pooling max](examples/tweaks/swe14_pmax_pcyuv.jpg)
@@ -109,7 +116,7 @@ space), thus producing color-preserving style trasnfer:
 
 ### Data Files
 
-* [Pre-trained VGG network][net] (MD5 `8ee3263992981a1d26e73b3ca028a123`) - put it in the top level of this repository, or specify its location using the `--network` option.
+* [Pre-trained VGG network][net] (MD5 `106118b7cf60435e6d8e04f6a6dc3657`) - put it in the top level of this repository, or specify its location using the `--network` option.
 
 ### Dependencies
 
@@ -138,10 +145,10 @@ If you use this implementation in your work, please cite the following:
 
 ## License
 
-Copyright (c) 2015-2017 Anish Athalye. Released under GPLv3. See
+Copyright (c) 2015-2019 Anish Athalye. Released under GPLv3. See
 [LICENSE.txt][license] for details.
 
-[net]: http://www.vlfeat.org/matconvnet/models/beta16/imagenet-vgg-verydeep-19.mat
+[net]: https://www.vlfeat.org/matconvnet/models/imagenet-vgg-verydeep-19.mat
 [paper]: http://arxiv.org/pdf/1508.06576v2.pdf
 [l-bfgs]: https://en.wikipedia.org/wiki/Limited-memory_BFGS
 [adam]: http://arxiv.org/abs/1412.6980

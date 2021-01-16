@@ -1,8 +1,14 @@
-# Copyright (c) 2015-2017 Anish Athalye. Released under GPLv3.
+# Copyright (c) 2015-2019 Anish Athalye. Released under GPLv3.
 
 import tensorflow as tf
 import numpy as np
 import scipy.io
+
+# work-around for more recent versions of tensorflow
+# https://github.com/tensorflow/tensorflow/issues/24496
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
 
 VGG19_LAYERS = (
     'conv1_1', 'relu1_1', 'conv1_2', 'relu1_2', 'pool1',
@@ -21,10 +27,14 @@ VGG19_LAYERS = (
 
 def load_net(data_path):
     data = scipy.io.loadmat(data_path)
-    if not all(i in data for i in ('layers', 'classes', 'normalization')):
-        raise ValueError("You're using the wrong VGG19 data. Please follow the instructions in the README to download the correct data.")
-    mean = data['normalization'][0][0][0]
-    mean_pixel = np.mean(mean, axis=(0, 1))
+    if 'normalization' in data:
+        # old format, for data where
+        # MD5(imagenet-vgg-verydeep-19.mat) = 8ee3263992981a1d26e73b3ca028a123
+        mean_pixel = np.mean(data['normalization'][0][0][0], axis=(0, 1))
+    else:
+        # new format, for data where
+        # MD5(imagenet-vgg-verydeep-19.mat) = 106118b7cf60435e6d8e04f6a6dc3657
+        mean_pixel = data['meta']['normalization'][0][0][0][0][2][0][0]
     weights = data['layers'][0]
     return weights, mean_pixel
 
@@ -34,7 +44,12 @@ def net_preloaded(weights, input_image, pooling):
     for i, name in enumerate(VGG19_LAYERS):
         kind = name[:4]
         if kind == 'conv':
-            kernels, bias = weights[i][0][0][0][0]
+            if isinstance(weights[i][0][0][0][0], np.ndarray):
+                # old format
+                kernels, bias = weights[i][0][0][0][0]
+            else:
+                # new format
+                kernels, bias = weights[i][0][0][2][0]
             # matconvnet: weights are [width, height, in_channels, out_channels]
             # tensorflow: weights are [height, width, in_channels, out_channels]
             kernels = np.transpose(kernels, (1, 0, 2, 3))
